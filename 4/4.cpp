@@ -74,13 +74,27 @@ bool hasContainment(const RangePair& pair) {
     return (r1inr2 || r2inr1);
 }
 
+bool hasOverlap(const RangePair& pair) {
+    const Range r1 = pair.r1;
+    const Range r2 = pair.r2;
+
+    return (min(r1.max, r2.max) >= max(r1.min, r2.min));
+}
+
 int main() {
     int containments = 0;
+    int overlaps = 0;
 
     vector<RangePair> pairs = preprocess(INPUT_FILENAME);
     for (RangePair pair : pairs) {
         if (hasContainment(pair)) { containments++; }
     }
-    cout << containments;
+
+    for (RangePair pair : pairs) {
+        if (hasOverlap(pair)) { overlaps++; }
+    }
+
+    cout << containments << endl;
+    cout << overlaps << endl;
     return 0;
 }
