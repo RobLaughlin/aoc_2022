@@ -12,49 +12,50 @@ FileNode* FileNode::get_parent() const {
     return this->parent;
 }
 
-std::unordered_map<std::string, FileNode*> FileNode::get_children() {
+const std::unordered_map<std::string, FileNode*>& FileNode::get_files() const {
     return this->children;
 }
 
-size_t FileNode::get_size() const {
+const size_t& FileNode::get_size() const {
     return this->size;
 }
 
-std::string FileNode::get_filename() const {
+const std::string& FileNode::get_filename() const {
     return this->filename;
 }
 
-FileNode::FileType FileNode::get_file_type() const {
+const FileNode::FileType& FileNode::get_file_type() const {
     return this->file_type;
 }
 
-std::vector<const FileNode*>* FileNode::get_nodes() const {
+const std::vector<const FileNode*>* FileNode::get_nodes() const {
+    // Traverse all the nodes using a stack and return a list of all nodes
     std::vector<const FileNode*>* node_list = new std::vector<const FileNode*>();
     std::stack<const FileNode*> nodes = std::stack<const FileNode*>();
-    nodes.push(this);
 
+    nodes.push(this);
     while (nodes.size() > 0) {
         const FileNode* node = nodes.top();
         nodes.pop();
 
         node_list->push_back(node);
-        for (auto& it : node->children) {
-            nodes.push(it.second);
+        for (auto& [_ , child] : node->children) {
+            nodes.push(child);
         }
     }
 
     return node_list;
 }
 
-FileNode* FileNode::find(std::string filename) const {
-    FileNode* file_node = nullptr;
+FileNode* FileNode::find_child(std::string filename) const {
+    FileNode* child = nullptr;
 
     auto ptr = this->children.find(filename);
     if (ptr != this->children.end()) {
-        file_node = this->children.at(filename);
+        child = this->children.at(filename);
     }
 
-    return file_node;
+    return child;
 }
 
 FileNode* FileNode::insert_file(std::string filename, FileType file_type, size_t size) {
@@ -77,6 +78,8 @@ FileNode* FileNode::insert_file(std::string filename, FileType file_type, size_t
 FileNode* FileNode::remove() {
     // Delete all nodes depth-first
     std::stack<FileNode*> delete_stack = std::stack<FileNode*>();
+
+    // Return parent of this node at the end
     FileNode* parent = this->parent;
 
     delete_stack.push(this);
@@ -84,13 +87,18 @@ FileNode* FileNode::remove() {
         FileNode* node = delete_stack.top();
         delete_stack.pop();
 
-        for (auto const& [child_filename, child] : node->children) {
-            child->parent = nullptr;
-            delete_stack.push(child);
-        }
-
+        // Sever all parent connections
         if (node->parent != nullptr) {
             node->parent->children.erase(node->filename);
+            node->parent = nullptr;
+        }
+
+        // Sever all child connections
+        std::unordered_map<std::string, FileNode*> children = node->children;
+        for (auto const& [child_filename, child] : children) {
+            node->children.erase(child_filename);
+            child->parent = nullptr;
+            delete_stack.push(child);
         }
 
         delete node;
@@ -102,7 +110,7 @@ FileNode* FileNode::remove() {
 std::ostream& operator<<(std::ostream& os, const FileNode& file_node) {
     struct Elem {
         FileNode node;
-        int depth;
+        int depth; // Need depth to determine spacing in terminal
     };
 
     std::stack<Elem> nodes = std::stack<Elem>();
@@ -115,18 +123,14 @@ std::ostream& operator<<(std::ostream& os, const FileNode& file_node) {
         nodes.pop();
         
         std::stringstream filetype;
-        if (node.file_type == FileNode::DIR) {
-            filetype << "(dir)";
-        }
-        else {
-            filetype << "(file, size=" << node.size << ')'; 
-        }
+        if (node.file_type == FileNode::DIR) { filetype << "(dir)"; }
+        else { filetype << "(file, size=" << node.size << ')'; }
 
         std::string spacing(2*depth, ' ');
         os << spacing << "- " << node.filename << ' ' << filetype.str() << std::endl;
 
-        for (auto& it : node.children) {
-            nodes.push(Elem{*it.second, depth+1});
+        for (auto const& [_, child] : node.children) {
+            nodes.push(Elem{*child, depth+1});
         }
     }
 
