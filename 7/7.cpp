@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <regex>
+#include <limits>
 
 using namespace std;
 
@@ -57,7 +58,7 @@ FileNode* preprocess(const string &input_file) {
     return root;
 }
 
-size_t get_sizes(FileNode* root, size_t max_size) {
+size_t get_sizes(FileNode* root, size_t max_size=numeric_limits<size_t>::max()) {
     size_t size = 0;
 
     vector<const FileNode*>* nodes = root->get_nodes();
@@ -73,13 +74,40 @@ size_t get_sizes(FileNode* root, size_t max_size) {
     return size;
 }
 
+size_t smallest_dir_required(FileNode* root, size_t size_filesystem, size_t space_required) {
+    const size_t total_size = root->get_size();
+    const size_t free_space = size_filesystem - total_size;
+
+    size_t smallest_dir = numeric_limits<size_t>::max();
+    vector<const FileNode*>* nodes = root->get_nodes();
+    for (const FileNode* node : *nodes) {
+        size_t node_size = node->get_size();
+        FileNode::FileType node_type = node->get_file_type();
+        if (node_type == FileNode::DIR 
+            && node_size+free_space >= space_required
+            && node_size < smallest_dir) 
+        {
+            smallest_dir = node_size;
+        }
+    }
+
+    // No such directory we can delete.
+    if (smallest_dir == numeric_limits<size_t>::max()) { return -1; }
+
+    return smallest_dir;
+}
+
 int main() {
     const size_t MAX_SIZE = 100000;
+    const size_t SIZE_FILESYSTEM = 70000000;
+    const size_t SPACE_NEEDED = 30000000;
+
     FileNode* root = preprocess(INPUT_FILENAME);
     root = root->find("/");
 
     cout << *root << endl;
     cout << "Sum of directory sizes under " << MAX_SIZE << ": " << get_sizes(root, MAX_SIZE) << endl;
-
+    cout << "Size of the smallest directory required to achieve the space requirement: ";
+    cout << smallest_dir_required(root, SIZE_FILESYSTEM, SPACE_NEEDED) << endl;
     return 0;
 }

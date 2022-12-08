@@ -12,8 +12,16 @@ FileNode* FileNode::get_parent() const {
     return this->parent;
 }
 
+std::unordered_map<std::string, FileNode*> FileNode::get_children() {
+    return this->children;
+}
+
 size_t FileNode::get_size() const {
     return this->size;
+}
+
+std::string FileNode::get_filename() const {
+    return this->filename;
 }
 
 FileNode::FileType FileNode::get_file_type() const {
@@ -84,7 +92,7 @@ FileNode* FileNode::remove() {
         if (node->parent != nullptr) {
             node->parent->children.erase(node->filename);
         }
-        
+
         delete node;
     }
     

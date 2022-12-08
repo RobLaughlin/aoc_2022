@@ -13,7 +13,9 @@ public:
     FileNode(std::string filename, FileType file_type, size_t size=0, FileNode* parent=nullptr);
 
     FileNode* get_parent() const;
+    std::unordered_map<std::string, FileNode*> get_children();
     size_t get_size() const;
+    std::string get_filename() const;
     FileType get_file_type() const;
     std::vector<const FileNode*>* get_nodes() const;
 
