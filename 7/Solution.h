@@ -7,7 +7,7 @@
 class Solution {
 public:
     Solution(const std::string& input_file, const size_t& filesystem_size);
-    FileNode* const root = new FileNode("/", FileNode::DIR, 0);
+    FileNode* root;
 
     // Sum all the sizes of directories with size <= max_size
     size_t sum_dir_sizes(size_t max_size=std::numeric_limits<size_t>::max()) const;

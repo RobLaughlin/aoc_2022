@@ -9,6 +9,7 @@ Solution::Solution(const std::string& input_file, const size_t& filesystem_size)
         throw std::invalid_argument("Error opening input file");
     }
     
+    this->root = new FileNode("/", FileNode::DIR, 0);
     FileNode* cwd = this->root; // Current working directory
 
     std::string line;
@@ -51,7 +52,7 @@ Solution::Solution(const std::string& input_file, const size_t& filesystem_size)
         }
     }
 
-    *this->root = *root->find_child("/");
+    this->root = root->find_child("/");
     this->FILESYSTEM_SIZE = filesystem_size;
 }
 

@@ -76,40 +76,29 @@ FileNode* FileNode::insert_file(std::string filename, FileType file_type, size_t
 }
 
 FileNode* FileNode::remove() {
-    // Delete all nodes depth-first
-    std::stack<FileNode*> delete_stack = std::stack<FileNode*>();
+    // Delete all nodes depth-first, recursively
+    std::unordered_map<std::string, FileNode*> children = this->children;
+    for (auto const& [child_filename, child] : children) {
+        child->remove();
+    }
 
     // Return parent of this node at the end
     FileNode* parent = this->parent;
 
-    delete_stack.push(this);
-    while (delete_stack.size() > 0) {
-        FileNode* node = delete_stack.top();
-        delete_stack.pop();
-
-        // Sever all parent connections
-        if (node->parent != nullptr) {
-            node->parent->children.erase(node->filename);
-            node->parent = nullptr;
-        }
-
-        // Sever all child connections
-        std::unordered_map<std::string, FileNode*> children = node->children;
-        for (auto const& [child_filename, child] : children) {
-            node->children.erase(child_filename);
-            child->parent = nullptr;
-            delete_stack.push(child);
-        }
-
-        delete node;
+    // Update size and sever connection
+    if (parent != nullptr) {
+        parent->size -= this->size;
+        this->parent->children.erase(this->filename);
+        this->parent = nullptr;
     }
-    
+
+    delete this;
     return parent;
 }
 
-std::ostream& operator<<(std::ostream& os, const FileNode& file_node) {
+std::ostream& operator<<(std::ostream& os, const FileNode* file_node) {
     struct Elem {
-        FileNode node;
+        const FileNode* node;
         int depth; // Need depth to determine spacing in terminal
     };
 
@@ -118,21 +107,21 @@ std::ostream& operator<<(std::ostream& os, const FileNode& file_node) {
 
     while (nodes.size() > 0) {
         Elem elem = nodes.top();
-        FileNode node = elem.node;
+        const FileNode* node = elem.node;
         int depth = elem.depth;
         nodes.pop();
         
         std::stringstream filetype;
-        if (node.file_type == FileNode::DIR) { filetype << "(dir)"; }
-        else { filetype << "(file, size=" << node.size << ')'; }
+        if (node->get_file_type() == FileNode::DIR) { filetype << "(dir)"; }
+        else { filetype << "(file, size=" << node->get_size() << ')'; }
 
         std::string spacing(2*depth, ' ');
-        os << spacing << "- " << node.filename << ' ' << filetype.str() << std::endl;
+        os << spacing << "- " << node->get_filename() << ' ' << filetype.str() << std::endl;
 
-        for (auto const& [_, child] : node.children) {
-            nodes.push(Elem{*child, depth+1});
+        for (auto const& [_, child] : node->children) {
+            nodes.push(Elem{child, depth+1});
         }
     }
-
+    
     return os;
 }
