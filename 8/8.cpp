@@ -108,6 +108,71 @@ void bottom_visible_mask(const Grid<int>& grid, Grid<bool>& mask) {
     }
 }
 
+int scenic_score(const Grid<int>& grid, int row, int col) {
+    int r = row;
+    int c  = col;
+    int elem = grid.at(r, c);
+    int right_score = 0;
+    int left_score = 0;
+    int top_score = 0;
+    int bottom_score = 0;
+
+    c++;
+    while (grid.in_bounds(r, c)) {
+        right_score++;
+        
+        if (grid.at(r, c) >= elem) { break; }
+        c++;
+    }
+    c = col;
+
+    c--;
+    while (grid.in_bounds(r, c)) {
+        left_score++;
+
+        if (grid.at(r, c) >= elem) { break; }
+        c--;
+    }
+    c = col;
+
+    r--;
+    while (grid.in_bounds(r, c)) {
+        top_score++;
+
+        if (grid.at(r, c) >= elem) { break; }
+        r--;
+
+        
+    }
+    r = row;
+
+    r++;
+    while (grid.in_bounds(r, c)) {
+        bottom_score++;
+
+        if (grid.at(r, c) >= elem) { break; }
+        r++;
+    }
+    r = row;
+
+    return top_score*bottom_score*left_score*right_score;
+}
+
+int max_scenic_score(const Grid<int>& grid) {
+    int max_score = 0;
+
+    for (int r = 0; r < grid.get_rows(); r++) {
+        for (int c = 0; c < grid.get_cols(); c++) {
+            int score = scenic_score(grid, r, c);
+            if (score > max_score) {
+                max_score = score;
+            }
+        }
+    }
+
+    return max_score;
+}
+
 int main() {
     pair<unsigned int, unsigned int> dims = grid_dims(INPUT_FILENAME);
     Grid<int> grid = Grid<int>(dims.first, dims.second, 0);
@@ -124,12 +189,7 @@ int main() {
     top_visible_mask(grid, top_mask);
     bottom_visible_mask(grid, bottom_mask);
 
-    // cout << left_mask << endl;
-    // cout << right_mask << endl;
-    // cout << top_mask << endl;
-    // cout << bottom_mask << endl;
-    // cout << grid << endl;
     cout << count_visible(top_mask, right_mask, bottom_mask, left_mask) << endl;
-    // cout << count_ones(mask) << endl;
+    cout << max_scenic_score(grid) << endl;
     return 0;
 }
