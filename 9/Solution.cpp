@@ -16,42 +16,73 @@ Solution::Solution()
     }
 }
 
-std::unordered_map<std::string, int>* Solution::get_tail_visits() const {
-    std::pair<int, int> head_pos (0, 0);
-    std::pair<int, int> tail_pos (0, 0);
+std::unordered_map<std::string, int>* Solution::get_tail_visits(int num_knots) const {
+    std::vector<std::pair<int, int>> knots;
     std::unordered_map<std::string, int>* visited = new std::unordered_map<std::string, int>();
 
-    std::string tail_key = pair_to_string<int>(tail_pos);
+    std::string tail_key = pair_to_string<int>(std::pair<int, int>(0, 0));
     visited->insert({tail_key, 1});
 
+    // Let the first element of the knot vector be the head of the chain.
+    // The order of the vector is the order of the knots in the rope (or chain).
+    for (int i = 0; i < num_knots; i++) {
+        knots.push_back(std::pair<int, int>(0, 0));
+    }
+
     for (const std::pair<char, int>& move : this->moves) {
+        std::pair<int, int>* head_pos = &knots[0];
+
         for (int i = 0; i < move.second; i++) {
             switch (move.first) {
-                case 'R': head_pos.second++; break;
-                case 'U': head_pos.first--; break;
-                case 'L': head_pos.second--; break;
-                case 'D': head_pos.first++; break;
+                case 'R': head_pos->second++; break;
+                case 'U': head_pos->first--; break;
+                case 'L': head_pos->second--; break;
+                case 'D': head_pos->first++; break;
             }
-            
-            if (pair_dist<int>(head_pos, tail_pos) >= 2) {
-                // Tail is not connected to head.
-                // We need to update the tail in this case.
-    
-                update_tail(head_pos, tail_pos);
 
-                tail_key = pair_to_string<int>(tail_pos);
-                
-                if (visited->find(tail_key) == visited->end()) {
-                    visited->insert({tail_key, 0});
+            for (int j = 0; j < num_knots-1; j++) {
+                head_pos = &knots[j];
+                std::pair<int, int>* tail_pos = &(knots.at(j+1));
+
+                if (pair_dist<int>(*head_pos, *tail_pos) >= 2) {
+                    // Tail is not connected to head.
+                    // We need to update the tail in this case.
+        
+                    update_tail(*head_pos, *tail_pos);
+
+                    if (j+2 == num_knots) {
+                        // Case where we're updating the end of the tail
+                        tail_key = pair_to_string<int>(*tail_pos);
+                        
+                        if (visited->find(tail_key) == visited->end()) {
+                            visited->insert({tail_key, 0});
+                        }
+
+                        (*visited)[tail_key]++;
+                    }
+
                 }
-
-                (*visited)[tail_key]++;
             }
+
+            // Reset the head position back to the start
+            head_pos = &knots[0];
         }
 
     }
 
     return visited;
+}
+
+int Solution::num_tail_visits(int num_knots) const {
+    int visits = 0;
+    std::unordered_map<std::string, int>* tail_visits = this->get_tail_visits(num_knots);
+    
+    for (auto const& kv : *tail_visits) {
+        visits++;
+    }
+
+    delete tail_visits;
+    return visits;
 }
 
 void Solution::update_tail(const std::pair<int, int>& head_pos, std::pair<int, int>& tail_pos) const {

@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <fstream>
-#include <iostream>
 #include <utility>
 #include <vector>
 #include <unordered_map>
@@ -12,7 +11,8 @@ class Solution {
 public:
     static const std::string INPUT_FILENAME;
     Solution();
-    std::unordered_map<std::string, int>* get_tail_visits() const;
+    std::unordered_map<std::string, int>* get_tail_visits(int num_knots=1) const;
+    int num_tail_visits(int num_knots=1) const;
 private:
     std::vector<std::pair<char, int>> moves;
     void update_tail(const std::pair<int, int>& head_pos, std::pair<int, int>& tail_pos) const;
