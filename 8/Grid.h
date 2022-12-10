@@ -7,7 +7,7 @@
 template <class T>
 class Grid {
 public:
-    Grid(unsigned int rows, unsigned int cols, T initializer);
+    Grid(unsigned int rows=0, unsigned int cols=0, T initializer=0);
 
     T at(unsigned int row, unsigned int col) const;
     bool in_bounds(unsigned int row, unsigned int col) const;
