@@ -86,7 +86,6 @@ int Solution::num_tail_visits(int num_knots) const {
 }
 
 void Solution::update_tail(const std::pair<int, int>& head_pos, std::pair<int, int>& tail_pos) const {
-    // Tail is 2 spaces to the left
     const int head_row = head_pos.first;
     const int head_col = head_pos.second;
     const int tail_row = tail_pos.first;
