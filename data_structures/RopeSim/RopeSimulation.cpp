@@ -1,5 +1,6 @@
 #include "RopeSimulation.h"
 #include <windows.h>
+#include <unordered_set>
 
 RopeSimulation::RopeSimulation(const std::string& input_file) {
     std::ifstream input(input_file);
@@ -15,7 +16,7 @@ RopeSimulation::RopeSimulation(const std::string& input_file) {
 }
 
 std::vector<RopeSimulation::State>* RopeSimulation::run(int num_knots) const {
-    if (num_knots < 2) { throw std::invalid_argument("Must have at least 2 knots to simulate"); }
+    if (num_knots < 1) { throw std::invalid_argument("Must have at least 1 knot(s) to simulate"); }
 
     std::vector<State>* states = new std::vector<State>();
 
@@ -130,6 +131,53 @@ void RopeSimulation::animate(int num_knots, std::ostream& out, int width, int he
     }
 
     delete states;
+}
+void RopeSimulation::save_sim(int num_knots, const std::string& output_filename) const {
+    int min_width = 0;
+    int max_width = 0;
+    int min_height = 0;
+    int max_height = 0;
+
+    std::vector<State>* states = this->run(num_knots);
+    std::unordered_set<std::string> tails;
+    for (const State& state : *states) {
+        const Knot& tail = state.back();
+        min_height = tail.first < min_height ? tail.first : min_height;
+        max_height = tail.first > max_height ? tail.first : max_height;
+        min_width = tail.second < min_width ? tail.second : min_width;
+        max_width = tail.second > max_width ? tail.second : max_width;
+
+        const std::string tail_key = knot_to_string(tail);
+        if (tails.find(tail_key) == tails.end()) {
+            tails.insert(tail_key);
+        }
+    }
+
+    int width = max_width - min_width;
+    int height = max_height - min_height;
+    
+    // Force width and height to be odd to have a true "center" knot
+    width += width % 2 ? 1 : 0;
+    height += height % 2 ? 1 : 0;
+    const int center_x = (width-1)/2;
+    const int center_y = (height-1)/2;
+
+    std::ofstream out(output_filename);
+    for (int r = 0; r < height; r++) {
+        for (int c = 0; c < width; c++) {
+            const Knot coord (r-center_y, c-center_x);
+            const std::string coord_key = knot_to_string(coord);
+
+            if (tails.find(coord_key) == tails.end()) {
+                out << '.';
+            }
+            else {
+                out << '#';
+            }
+        }
+        out << std::endl;
+    }
+    out.close();
 }
 
 void RopeSimulation::update_tail(const RopeSimulation::Knot& head_pos, RopeSimulation::Knot& tail_pos) const {
