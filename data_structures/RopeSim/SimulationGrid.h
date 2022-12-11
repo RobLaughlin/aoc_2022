@@ -1,5 +1,5 @@
 #pragma once
-#include "../data_structures/Grid.h"
+#include "../Grid.h"
 
 class SimulationGrid : Grid<char> {
 public:
