@@ -7,6 +7,10 @@
 #include "../data_structures/Grid.h"
 
 const std::string Solution::INPUT_FILENAME = "input.txt";
+const int Solution::SIGNAL_START = 20;
+const int Solution::SIGNAL_CYCLE = 40;
+const int Solution::CRT_WIDTH = 40;
+const int Solution::CRT_HEIGHT = 6;
 
 Solution::Solution() {
     std::ifstream input(INPUT_FILENAME);
@@ -23,6 +27,22 @@ Solution::Solution() {
 
         this->instructions.push_back(TimedInstruction(timing, quantity));
     }
+}
+
+int Solution::total_strengths() const {
+    std::vector<int>* strengths = this->get_signal_strengths(SIGNAL_START, SIGNAL_CYCLE);
+
+    int total = 0;
+    for (int strength : *strengths) {
+        total += strength;
+    }
+
+    delete strengths;
+    return total;
+}
+
+std::string Solution::generate_screen() const {
+    return this->generate_image(CRT_WIDTH, CRT_HEIGHT);
 }
 
 const std::vector<TimedInstruction>& Solution::get_instructions() const {
