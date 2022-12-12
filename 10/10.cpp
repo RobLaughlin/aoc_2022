@@ -11,7 +11,8 @@ int main() {
         total += signal;
     }
 
-    std::cout << total;
+    std::cout << total << std::endl;
+    std::cout << solution.generate_image(40, 6) << std::endl;
     delete signals;
     return 0;
 }

@@ -3,8 +3,8 @@
 #include <unordered_map>
 #include <string>
 #include <queue>
-
-#include <iostream>
+#include <sstream>
+#include "../data_structures/Grid.h"
 
 const std::string Solution::INPUT_FILENAME = "input.txt";
 
@@ -29,6 +29,23 @@ const std::vector<TimedInstruction>& Solution::get_instructions() const {
     return this->instructions;
 }
 
+std::vector<int>* Solution::register_values() const {
+    std::vector<int>* values = new std::vector<int>();
+    int x = 1;
+    int cycle = 1;
+
+    for (const TimedInstruction& ti : this->instructions) {
+        for (int i = 1; i < ti.timing; i++) {
+            values->push_back(x);
+        }
+        cycle += ti.timing;
+        x += ti.quantity;
+        values->push_back(x);
+    }
+
+    return values;
+}
+
 std::vector<int>* Solution::get_signal_strengths(int start, int on_cycle) const {
     std::vector<int>* strengths = new std::vector<int>();
     int x = 1;
@@ -49,21 +66,32 @@ std::vector<int>* Solution::get_signal_strengths(int start, int on_cycle) const 
         
     }
 
-    // std::vector<int> additions(2*this->instructions.size(), 0);
-
-    // for (int i = 0; i < additions.size(); i++) {
-        
-    //     if (2*i+1 >= start && (2*i+1-start) % on_cycle == 0) {
-    //         std::cout << x << std::endl;
-    //     }
-    //     if (i < this->instructions.size()) {
-    //         int qty = this->instructions[i].quantity;
-    //         int timing = this->instructions[i].timing;
-    //         additions[i+timing] += qty;
-    //     }
-
-    //     x += additions[i];
-    //     // std::cout << x << std::endl << std::endl;
-    // }
     return strengths;
+}
+
+std::string Solution::generate_image(int width, int height) const {
+    std::vector<int>* values = register_values();
+    Grid<char> CRT(height, width, '.');
+
+    int pixel_row = 0;
+    int pixel_col = 0;
+    for (const int& x : *values) {
+        // std::cout << CRT << std::endl;
+        // std::cout << x << std::endl;
+        if (x == pixel_col || x == pixel_col+1 || x == pixel_col+2) {
+            CRT.place('#', pixel_row, pixel_col);
+        }
+        
+        pixel_col++;
+        if (pixel_col == width) {
+            pixel_col = 0;
+            pixel_row++;
+        }
+    }
+    delete values;
+
+    std::stringstream img;
+    img << CRT;
+
+    return img.str();
 }

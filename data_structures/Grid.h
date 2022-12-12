@@ -73,14 +73,10 @@ void Grid<T>::place(T elem, unsigned int row, unsigned int col) {
 template <class T>
 std::ostream& operator<<(std::ostream& os, const Grid<T>& other) {
     for (unsigned int r = 0; r < other.rows; r++) {
-        os << '[';
         for (unsigned int c = 0; c < other.cols; c++) {
             os << other.at(r, c);
-            if (c < other.cols-1) {
-                os << ", ";
-            }
         }
-        os << ']' << std::endl;
+        os << std::endl;
     }
     return os;
 }
