@@ -29,8 +29,31 @@ Solution::Solution() {
     input.close();
 }
 
-int Solution::shortest_path() const {
+int Solution::shortest_path(char start_elevation) const {
+    int min_path = std::numeric_limits<int>::max();
+
+    for (int r = 0; r < this->heightmap.get_rows(); r++) {
+        for (int c = 0; c < this->heightmap.get_cols(); c++) {
+            if (this->heightmap.at(r, c) == start_elevation) {
+                const int sp = shortest_path(r, c);
+                min_path = sp < min_path && sp != -1 ? sp : min_path;
+            }
+        }
+    }
+
+    // No path found
+    if (min_path == std::numeric_limits<int>::max()) {
+        return -1;
+    }
+
+    return min_path;
+} 
+
+int Solution::shortest_path(int start_row, int start_col) const {
     // Lazy Dijkstra's Algorithm
+    if (!this->heightmap.in_bounds(start_row, start_col)) {
+        throw std::invalid_argument("Start row and start column out of heightmap bounds.");
+    }
 
     // pair (best distance to node, key from grid index)
     typedef std::pair<int, int> ppair;
@@ -45,17 +68,16 @@ int Solution::shortest_path() const {
     std::priority_queue<ppair, std::vector<ppair>, std::greater<ppair>> pq;
 
     // Find start and end nodes
-    int start_idx = 0;
-    int end_idx = 0;
+    int start_idx = start_row*this->heightmap.get_cols()+start_col;
+    int end_idx = -1;
     for (int r = 0; r < this->heightmap.get_rows(); r++) {
         for (int c = 0; c < this->heightmap.get_cols(); c++) {
-            if (this->heightmap.at(r, c) == 'S') {
-                start_idx = r*this->heightmap.get_cols()+c;
-            }
-            else if (this->heightmap.at(r, c) == 'E') {
+            if (this->heightmap.at(r, c) == 'E') {
                 end_idx = r*this->heightmap.get_cols()+c;
+                break;
             }
         }
+        if (end_idx != -1) { break; }
     }
 
     pq.push(std::make_pair(0, start_idx));
@@ -93,8 +115,17 @@ int Solution::shortest_path() const {
 
             // If the neighbor is valid, we haven't visited it yet, and we've found a better path
             if (this->heightmap.in_bounds(n_row, n_col)) {
-                char n_val = this->heightmap.at(n_row, n_col) == 'E' ? 'z' : this->heightmap.at(n_row, n_col);
-                char val = node_val == 'S' ? 'a' : node_val;
+                char n_val = this->heightmap.at(n_row, n_col);
+                char val = node_val;
+
+                switch (n_val) {
+                    case 'S': n_val = 'a'; break;
+                    case 'E': n_val = 'z'; break;
+                }
+                switch (val) {
+                    case 'S': val = 'a'; break;
+                    case 'E': val = 'z'; break;
+                }
 
                 if (n_val <= val+1 && !visited[n_key] && dist + 1 < best_dist[n_key]) {
                     best_dist[n_key] = dist + 1;
