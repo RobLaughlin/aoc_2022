@@ -1,9 +1,9 @@
 #pragma once
-#include <unordered_set>
 #include <stack>
 #include <utility>
 #include <iostream>
 #include <string>
+#include <vector>
 
 template <typename T>
 class TreeNode {
@@ -14,8 +14,8 @@ public:
     static TreeNode<T>* Create(T value);
 
     T value;
-    const std::unordered_set<TreeNode<T>*>& children() const;
-
+    const std::vector<TreeNode<T>*>& children() const;
+    TreeNode<T>* parent() const;
     TreeNode<T>* add(T value);
     TreeNode<T>* remove();
 
@@ -25,11 +25,11 @@ private:
     TreeNode(T value);
 
     TreeNode<T>* m_parent;
-    std::unordered_set<TreeNode<T>*> m_children;
+    std::vector<TreeNode<T>*> m_children;
 };
 
 template <typename T>
-TreeNode<T>::TreeNode(T value) : value(value), m_parent(nullptr), m_children(std::unordered_set<TreeNode<T>*>()) {}
+TreeNode<T>::TreeNode(T value) : value(value), m_parent(nullptr), m_children(std::vector<TreeNode<T>*>()) {}
 
 template <typename T>
 TreeNode<T>* TreeNode<T>::Create(T value) {
@@ -37,17 +37,22 @@ TreeNode<T>* TreeNode<T>::Create(T value) {
 }
 
 template <typename T>
-const std::unordered_set<TreeNode<T>*>& TreeNode<T>::children() const {
-    return this->children;
+const std::vector<TreeNode<T>*>& TreeNode<T>::children() const {
+    return this->m_children;
+}
+
+template <typename T>
+TreeNode<T>* TreeNode<T>::parent() const {
+    return this->m_parent;
 }
 
 template <typename T>
 TreeNode<T>* TreeNode<T>::add(T value) {
     // Return the newly added node
 
-    TreeNode<T>* new_node = new TreeNode<T>(value);
+    TreeNode<T>* new_node = TreeNode<T>::Create(value);
     new_node->m_parent = this;
-    this->m_children.insert(new_node);
+    this->m_children.push_back(new_node);
 
     return new_node;
 }
@@ -59,7 +64,7 @@ TreeNode<T>* TreeNode<T>::remove() {
 
     // Remove all children
     while (!this->m_children.empty()) {
-        TreeNode<T>* const child = *this->m_children.begin();
+        TreeNode<T>* const child = this->m_children.back();
         child->remove();
     }
     
