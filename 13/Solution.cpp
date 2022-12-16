@@ -1,11 +1,12 @@
 #include "Solution.h"
 #include <fstream>
 #include <regex>
+#include <algorithm>
 
 const std::string Solution::INPUT_FILENAME = "input.txt";
 
 Solution::Solution() 
-    : tree_pairs(std::vector<TreePair>())
+    : tree_pairs(std::vector<TreePair>()), packets(std::vector<TreeNode<int>*>())
 {
     std::ifstream input(INPUT_FILENAME);
 
@@ -14,15 +15,27 @@ Solution::Solution()
     while (std::getline(input, line)) {
         if (p.first == nullptr) {
             p.first = Solution::parse_line(line);
+            this->packets.push_back(p.first);
         }
         else if (p.second == nullptr) {
             p.second = Solution::parse_line(line);
+            this->packets.push_back(p.second);
             this->tree_pairs.push_back(p);
         }
         else {
             p = TreePair(nullptr, nullptr);
         }
     }
+
+    TreeNode<int>* divider1 = TreeNode<int>::Create(-1);
+    divider1 = divider1->add(-1);
+    divider1->add(2);
+    this->packets.push_back(divider1->parent());
+
+    TreeNode<int>* divider2 = TreeNode<int>::Create(-1);
+    divider2 = divider2->add(-1);
+    divider2->add(6);
+    this->packets.push_back(divider2->parent());
 }
 
 int Solution::count_indices() const {
@@ -35,7 +48,32 @@ int Solution::count_indices() const {
     return total;
 }
 
-const TreeNode<int>* Solution::parse_line(std::string line) {
+int Solution::find_decoder_key() {
+    int key = 1;
+
+    // Sort the packets
+    std::sort(this->packets.begin(), this->packets.end(), Solution::in_order);
+
+    // Find the divider packets and multiply their indices together
+    for (int i = 0; i < this->packets.size(); i++) {
+        const TreeNode<int>* packet = this->packets[i];
+
+        if (packet->value == -1 && packet->children().size() == 1) {
+            packet = packet->children()[0];
+
+            if (packet->value == -1 && packet->children().size() == 1) {
+                packet = packet->children()[0];
+                if (packet->value == 2 || packet->value == 6) {
+                    key *= (i+1);
+                }
+            }
+        }
+    }
+    
+    return key;
+}
+
+TreeNode<int>* Solution::parse_line(std::string line) {
     TreeNode<int>* node = nullptr;
 
     while (line.length() > 0) {
