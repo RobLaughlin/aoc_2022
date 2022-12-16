@@ -10,7 +10,7 @@ namespace Solution14 {
 
         static const std::string INPUT_FILENAME;
         Solution();
-        int find_sand_limit(int sand_source_row, int sand_source_col);
+        int find_sand_limit(int sand_source_x, int sand_source_y, bool has_floor) const;
     private:
         CoordMap coord_map;
 

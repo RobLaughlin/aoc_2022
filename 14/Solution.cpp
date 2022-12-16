@@ -71,7 +71,7 @@ void Solution::parse_line(std::string line) {
     }
 }
 
-int Solution::find_sand_limit(int sand_source_x, int sand_source_y) {
+int Solution::find_sand_limit(int sand_source_x, int sand_source_y, bool has_floor) const {
     int sand_floor = std::numeric_limits<int>::min();
     
     // Find bottom of the sand floor (max row)
@@ -83,33 +83,48 @@ int Solution::find_sand_limit(int sand_source_x, int sand_source_y) {
     }
 
     // Simulate sand falling
-    HPair::IIPair sand_coord(sand_source_x, sand_source_y);
+    const HPair::IIPair sand_source(sand_source_x, sand_source_y);
+    HPair::IIPair sand_coord = sand_source;
+    CoordMap cm = this->coord_map;
+
     int fallen = 0;
     while (true) {
         int& x = sand_coord.first;
         int& y = sand_coord.second;
+        
+        // Falling into the void
+        if (!has_floor && y > sand_floor) {
+            return fallen;
+        }
 
-        // Either we're backed up or falling into the void
-        if (y < sand_source_y || y > sand_floor) {
+        const bool down_clear = cm.find(HPair::IIPair(x, y+1)) == coord_map.end();
+        const bool down_left_clear = cm.find(HPair::IIPair(x-1, y+1)) == coord_map.end();
+        const bool down_right_clear = cm.find(HPair::IIPair(x+1, y+1)) == coord_map.end();
+
+        // Check if all the sand has filled in
+        if (has_floor 
+            && cm.find(sand_source) != coord_map.end() 
+            && cm[sand_source] == 'o') 
+        {
             return fallen;
         }
 
         // Go straight down until blocked
-        if (this->coord_map.find(HPair::IIPair(x, y+1)) == coord_map.end()) { y++; }
+        
+        else if ((!has_floor && down_clear) || (y+1 != sand_floor+2 && has_floor && down_clear)) { y++; }
 
         // Go bottom-left if possible
-        else if (this->coord_map.find(HPair::IIPair(x-1, y+1)) == coord_map.end()) { x--; y++; }
+        else if ((!has_floor && down_left_clear) || (y+1 != sand_floor+2 && has_floor && down_left_clear)) { x--; y++; }
 
         // Go bottom-right if possible
-        else if (this->coord_map.find(HPair::IIPair(x+1, y+1)) == coord_map.end()) { x++; y++; }
+        else if ((!has_floor && down_right_clear) || (y+1 != sand_floor+2 && has_floor && down_right_clear)) { x++; y++; }
 
         // We've stopped!
         else {
-            this->coord_map[sand_coord] = 'o';
+            cm[sand_coord] = 'o';
             fallen++;
 
-            sand_coord.first = sand_source_x;
-            sand_coord.second = sand_source_y;
+            sand_coord = sand_source;
         }
     }
 }
