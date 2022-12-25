@@ -16,5 +16,12 @@ namespace Solution17 {
     private:
         static const std::vector<Rocks::Rock> m_ROCKS;
         std::string m_jetstream;
+
+        std::string hash_state(
+            const RockType& rocktype, 
+            const std::vector<long long>& surface, 
+            const long long& jet_index,
+            const long long& max_height
+        ) const;
     };
 };
